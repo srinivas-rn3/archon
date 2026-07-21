@@ -11,7 +11,7 @@ supervisor_llm = ChatBedrockConverse(
     region_name=AWS_REGION,
 )
 
-VALID_AGENTS = {"code_sql", "scheduler", "summary", "github"}
+VALID_AGENTS = {"cost_anomaly", "cost_forecast", "summary", "github"}
 
 
 def supervisor_node(state: AgentState) -> AgentState:
