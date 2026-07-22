@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Archon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0F1115;
+    --surface: #171A21;
+    --raised: #1E222B;
+    --border: #262B35;
+    --text: #EDEBE6;
+    --dim: #83899a;
+    --brass: #C9A063;
+
+    --a-github: #9C8FE8;
+    --a-summary: #6FBFB0;
+    --a-cost_anomaly: #E0954F;
+    --a-cost_forecast: #5FA8E0;
+    --a-unclear: #6A6F79;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  #rail {
+    width: 236px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 28px 20px;
+  }
+
+  .wordmark {
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--brass);
+    letter-spacing: 0.5px;
+  }
+
+  .subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--dim);
+    margin-top: 4px;
+    letter-spacing: 0.4px;
+  }
+
+  .rail-section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--dim);
+    margin: 32px 0 12px;
+  }
+
+  .agent-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--text);
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px currentColor;
+  }
+
+  .agent-row.github .dot   { background: var(--a-github);   color: var(--a-github); }
+  .agent-row.summary .dot  { background: var(--a-summary);  color: var(--a-summary); }
+  .agent-row.cost_anomaly .dot  { background: var(--a-cost_anomaly);  color: var(--a-cost_anomaly); }
+  .agent-row.cost_forecast .dot { background: var(--a-cost_forecast); color: var(--a-cost_forecast); }
+
+  .mode-toggle {
+    display: flex;
+    background: var(--raised);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    margin-top: 10px;
+  }
+
+  .mode-btn {
+    flex: 1;
+    text-align: center;
+    padding: 7px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .mode-btn.active {
+    background: var(--bg);
+    color: var(--brass);
+  }
+
+  #agent-select {
+    margin-top: 10px;
+    width: 100%;
+    background: var(--raised);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    display: none;
+  }
+
+  .rail-footer {
+    margin-top: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    line-height: 1.6;
+  }
+
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  #chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 40px 0;
+  }
+
+  #chat-inner {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .empty-state {
+    text-align: center;
+    margin-top: 18vh;
+    color: var(--dim);
+  }
+
+  .empty-state .seal {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1.5px solid var(--brass);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+    font-family: 'Fraunces', serif;
+    color: var(--brass);
+    font-size: 20px;
+  }
+
+  .empty-state p { font-size: 13.5px; margin-top: 4px; }
+
+  .msg { display: flex; flex-direction: column; max-width: 80%; }
+  .msg.user { align-self: flex-end; align-items: flex-end; }
+  .msg.assistant { align-self: flex-start; }
+
+  .seal-badge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 7px;
+  }
+
+  .seal-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .seal-dot::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--bg);
+  }
+
+  .seal-dot.github { background: var(--a-github); }
+  .seal-dot.summary { background: var(--a-summary); }
+  .seal-dot.cost_anomaly { background: var(--a-cost_anomaly); }
+  .seal-dot.cost_forecast { background: var(--a-cost_forecast); }
+  .seal-dot.unclear { background: var(--a-unclear); }
+
+  .seal-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+  }
+  .seal-label.github { color: var(--a-github); }
+  .seal-label.summary { color: var(--a-summary); }
+  .seal-label.cost_anomaly { color: var(--a-cost_anomaly); }
+  .seal-label.cost_forecast { color: var(--a-cost_forecast); }
+  .seal-label.unclear { color: var(--a-unclear); }
+
+  .bubble {
+    padding: 13px 17px;
+    border-radius: 12px;
+    line-height: 1.6;
+    font-size: 14.5px;
+    white-space: pre-wrap;
+  }
+
+  .msg.user .bubble {
+    background: var(--raised);
+    border: 1px solid var(--border);
+    border-bottom-right-radius: 3px;
+  }
+
+  .msg.assistant .bubble {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 3px;
+  }
+
+  .thinking {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .thinking .pulse {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--brass);
+    animation: pulse 1.1s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  #input-area {
+    border-top: 1px solid var(--border);
+    padding: 20px 32px 26px;
+    display: flex;
+    justify-content: center;
+  }
+
+  #input-form {
+    max-width: 700px;
+    width: 100%;
+    display: flex;
+    gap: 10px;
+  }
+
+  #input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 13px 16px;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+
+  #input:focus { border-color: var(--brass); }
+  #input::placeholder { color: var(--dim); }
+
+  #send-btn {
+    background: var(--brass);
+    color: var(--bg);
+    border: none;
+    padding: 0 22px;
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  #send-btn:disabled { opacity: 0.4; cursor: default; }
+  #send-btn:hover:not(:disabled) { opacity: 0.85; }
+
+  #chat::-webkit-scrollbar { width: 8px; }
+  #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div id="rail">
+  <div class="wordmark">Archon</div>
+  <div class="subtitle">AWS &amp; DEV ASSISTANT</div>
+
+  <div class="rail-section-label">Specialists</div>
+  <div class="agent-row github"><span class="dot"></span>github</div>
+  <div class="agent-row summary"><span class="dot"></span>summary</div>
+  <div class="agent-row cost_anomaly"><span class="dot"></span>cost_anomaly</div>
+  <div class="agent-row cost_forecast"><span class="dot"></span>cost_forecast</div>
+
+  <div class="rail-section-label">Routing</div>
+  <div class="mode-toggle">
+    <div class="mode-btn active" id="mode-auto">auto</div>
+    <div class="mode-btn" id="mode-manual">manual</div>
+  </div>
+  <select id="agent-select">
+    <option value="github">github</option>
+    <option value="summary">summary</option>
+    <option value="cost_anomaly">cost_anomaly</option>
+    <option value="cost_forecast">cost_forecast</option>
+  </select>
+
+  <div class="rail-footer">
+    Supervisor routes each request<br>to the correct specialist.
+  </div>
+</div>
+
+<div id="main">
+  <div id="chat">
+    <div id="chat-inner">
+      <div class="empty-state" id="empty-state">
+        <div class="seal">A</div>
+        <p>Ask about AWS costs, GitHub activity,<br>or summarize something.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="input-area">
+    <form id="input-form">
+      <input id="input" type="text" placeholder="Ask Archon…" autocomplete="off" />
+      <button type="submit" id="send-btn">Send</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const chatInner = document.getElementById('chat-inner');
+  const chat = document.getElementById('chat');
+  const form = document.getElementById('input-form');
+  const input = document.getElementById('input');
+  const sendBtn = document.getElementById('send-btn');
+  const emptyState = document.getElementById('empty-state');
+  const modeAuto = document.getElementById('mode-auto');
+  const modeManual = document.getElementById('mode-manual');
+  const agentSelect = document.getElementById('agent-select');
+
+  let mode = 'auto';
+
+  modeAuto.addEventListener('click', () => {
+    mode = 'auto';
+    modeAuto.classList.add('active');
+    modeManual.classList.remove('active');
+    agentSelect.style.display = 'none';
+  });
+
+  modeManual.addEventListener('click', () => {
+    mode = 'manual';
+    modeManual.classList.add('active');
+    modeAuto.classList.remove('active');
+    agentSelect.style.display = 'block';
+  });
+
+  function addUserMessage(text) {
+    if (emptyState) emptyState.remove();
+    const msg = document.createElement('div');
+    msg.className = 'msg user';
+    msg.innerHTML = `<div class="bubble"></div>`;
+    msg.querySelector('.bubble').textContent = text;
+    chatInner.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function addAssistantMessage(text, agent) {
+    const msg = document.createElement('div');
+    msg.className = 'msg assistant';
+    msg.innerHTML = `
+      <div class="seal-badge">
+        <div class="seal-dot ${agent}"></div>
+        <div class="seal-label ${agent}">${agent.replace('_',' ')}</div>
+      </div>
+      <div class="bubble"></div>
+    `;
+    msg.querySelector('.bubble').textContent = text;
+    chatInner.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const message = input.value.trim();
+    if (!message) return;
+
+    addUserMessage(message);
+    input.value = '';
+    sendBtn.disabled = true;
+
+    const thinking = document.createElement('div');
+    thinking.className = 'msg assistant';
+    thinking.innerHTML = `<div class="thinking"><span class="pulse"></span>${mode === 'auto' ? 'routing' : 'running ' + agentSelect.value}…</div>`;
+    chatInner.appendChild(thinking);
+    chat.scrollTop = chat.scrollHeight;
+
+    try {
+      const res = await fetch('http://localhost:8000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+      const data = await res.json();
+      thinking.remove();
+      addAssistantMessage(data.reply, data.agent_used);
+    } catch (err) {
+      thinking.remove();
+      addAssistantMessage('Could not reach the server. Is it running?', 'unclear');
+    }
+
+    sendBtn.disabled = false;
+    input.focus();
+  });
+</script>
+
+</body>
+</html>

@@ -54,3 +54,5 @@ htmlcov/
 
 # Jupyter (if you use notebooks for testing agents)
 .ipynb_checkpoints/
+# Ignore the configuration file containing API keys
+config.py
